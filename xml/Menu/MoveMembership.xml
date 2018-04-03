@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<menu>
+  <item>
+    <path>civicrm/movemembership</path>
+    <page_callback>CRM_LCD_MoveMembership_Form_MoveMembership</page_callback>
+    <title>Move Membership</title>
+    <access_arguments>access CiviMember</access_arguments>
+  </item>
+</menu>
