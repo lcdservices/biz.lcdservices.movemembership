@@ -19,10 +19,11 @@ class CRM_LCD_MoveMembership_BAO_MoveMembership {
       $subject = "Membership #{$params['membership_id']} Moved";
       $details = "Membership #{$params['membership_id']} was moved from contact #{$params['current_contact_id']} to contact #{$params['change_contact_id']}.";
 
-      $activityTypeID = CRM_Core_OptionGroup::getValue('activity_type',
-        'membership_reassignment',
-        'name'
-      );
+      $activityTypeID = \Civi\Api4\OptionValue::get(TRUE)
+        ->addSelect('value')
+        ->addWhere('option_group_id:name', '=', 'activity_type')
+        ->addWhere('name', '=', 'membership_reassignment')
+        ->first()['value'];
 
       $activityParams = array(
         'source_contact_id' => $params['current_contact_id'],
