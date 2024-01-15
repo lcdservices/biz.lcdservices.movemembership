@@ -2,6 +2,8 @@
 
 require_once 'movemembership.civix.php';
 
+use CRM_LCD_MoveMembership_ExtensionUtil as E;
+
 /**
  * Implements hook_civicrm_config().
  *
@@ -32,46 +34,12 @@ function movemembership_civicrm_install() {
 }
 
 /**
- * Implements hook_civicrm_uninstall().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
- */
-function movemembership_civicrm_uninstall() {
-  _movemembership_civix_civicrm_uninstall();
-}
-
-/**
  * Implements hook_civicrm_enable().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
 function movemembership_civicrm_enable() {
   _movemembership_civix_civicrm_enable();
-}
-
-/**
- * Implements hook_civicrm_disable().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
- */
-function movemembership_civicrm_disable() {
-  _movemembership_civix_civicrm_disable();
-}
-
-/**
- * Implements hook_civicrm_upgrade().
- *
- * @param $op string, the type of operation being performed; 'check' or 'enqueue'
- * @param $queue CRM_Queue_Queue, (for 'enqueue') the modifiable list of pending up upgrade tasks
- *
- * @return mixed
- *   Based on op. for 'check', returns array(boolean) (TRUE if upgrades are pending)
- *                for 'enqueue', returns void
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
- */
-function movemembership_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  return _movemembership_civix_civicrm_upgrade($op, $queue);
 }
 
 /**
@@ -123,37 +91,39 @@ function movemembership_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 }
 
 function movemembership_civicrm_links($op, $objectName, $objectId, &$links, &$mask, &$values) {
-  /*Civi::log()->debug('movemembership_civicrm_links', array(
-    '$op' => $op,
-    '$objectName' => $objectName,
-    '$objectId' => $objectId,
-    '$links' => $links,
-    '$mask' => $mask,
-    '$values' => $values,
-  ));*/
-
-  if ($op == 'membership.tab.row' && $objectName == 'Membership') {
+  if ($op === 'membership.tab.row' && $objectName === 'Membership' && CRM_Core_Permission::check('allow Move Membership')) {
     $links[] = array(
-      'name' => 'Move',
-      'url' => 'civicrm/movemembership',
+      'name' => E::ts('Move membership'),
+      'url' => 'civicrm/movemembership/task?reset=1&task_item=move',
       'qs' => 'id=%%id%%',
-      'title' => 'Move',
-      //'bit' => NULL,
+      'title' => E::ts('Move Membership'),
+      'key' => 'move',
+      'weight' => 130,
     );
   }
 }
 
 function movemembership_civicrm_searchTasks($objectType, &$tasks) {
-  /*Civi::log()->debug('movemembership_civicrm_searchTasks', array(
-    '$objectType' => $objectType,
-    '$tasks' => $tasks,
-  ));*/
-
-  if ($objectType == 'membership') {
-    $tasks[] = array(
-      'title' => 'Move memberships',
+  if ($objectType === 'membership' && CRM_Core_Permission::check('allow Move Membership')) {
+    $tasks[] = [
+      'title' => E::ts('Move memberships'),
       'class' => 'CRM_LCD_MoveMembership_Form_Task',
       'result' => TRUE,
-    );
+      'is_single_mode' => TRUE,
+      'title_single_mode' => E::ts('Move Membership'),
+      'name' => E::ts('Move Membership'),
+      'url' => 'civicrm/membership/task?reset=1&task_item=move',
+      'key' => 'move',
+      'weight' => 130,
+    ];
   }
+}
+
+/**
+ *Implementation of hook_civicrm_permission
+ * @param array $permissions
+ */
+function movemembership_civicrm_permission(&$permissions) {
+  $prefix = ts('Move Memberships') . ': '; // name of extension or module
+  $permissions['allow Move Membership'] = $prefix . ts('allow Move Membership');
 }
