@@ -1,9 +1,11 @@
 <?php
 
+use CRM_LCD_MoveMembership_ExtensionUtil as E;
+
 /**
  * Collection of upgrade steps.
  */
-class CRM_LCD_MoveMembership_Upgrader extends CRM_LCD_MoveMembership_Upgrader_Base {
+class CRM_LCD_MoveMembership_Upgrader extends CRM_Extension_Upgrader_Base {
 
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
@@ -14,19 +16,36 @@ class CRM_LCD_MoveMembership_Upgrader extends CRM_LCD_MoveMembership_Upgrader_Ba
   public function install() {
     //$this->executeSqlFile('sql/myinstall.sql');
 
-    //create new activity type
+    //create new activity type if it does not exist
     try {
-      civicrm_api3('activity_type', 'create', array(
-        'label' => 'Membership Reassignment',
-        'name' => 'membership_reassignment',
-        'filter' => 0,
-        'is_active' => 1,
-        'is_reserved' => 1,
-        'weight' => 1000,
-      ));
+      $optionValues = civicrm_api4('OptionValue', 'get', [
+        'select' => [
+          'id',
+        ],
+        'where' => [
+          ['option_group_id:name', '=', 'activity_type'],
+          ['name', '=', 'membership_reassignment'],
+        ],
+        'limit' => 25,
+        'checkPermissions' => FALSE,
+      ]);
+      if (!$optionValues->count()) {
+        civicrm_api4('OptionValue', 'create', [
+          'values' => [
+            'option_group_id.name' => 'activity_type',
+            'name' => 'membership_reassignment',
+            'label' => E::ts('Membership Reassignment'),
+            'filter' => 0,
+            'is_active' => TRUE,
+            'is_reserved' => TRUE,
+            'weight' => 1000,
+          ],
+          'checkPermissions' => FALSE,
+        ]);
+      }
     }
-    catch (CRM_API3_Exception $e) {
-      Civi::log()->error('CRM_LCD_MoveMembership_Upgrader install $e', $e);
+    catch (Exception $e) {
+      Civi::log()->error(E::ts('Error in CRM_LCD_MoveMembership_Upgrader install with message:')  . ' ' . $e->getMessage());
     }
   }
 
