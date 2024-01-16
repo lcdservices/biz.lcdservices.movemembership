@@ -1,6 +1,6 @@
 <?php
 
-require_once 'CRM/Core/Form.php';
+use CRM_LCD_MoveMembership_ExtensionUtil as E;
 
 /**
  * Form controller class
@@ -32,6 +32,11 @@ class CRM_LCD_MoveMembership_Form_MoveMembership extends CRM_Core_Form {
     $this->assign('currentContactName', CRM_Contact_BAO_Contact::displayName($contactID));
 
     $this->addEntityRef('change_contact_id', ts('Select Contact'), [], TRUE);
+    if (class_exists('CRM_LCD_MoveContrib_BAO_MoveContrib')) {
+      $this->add('checkbox', 'change_contributions', E::ts('Move all associated contributions'));
+    } else {
+      $this->add('hidden', 'change_contributions', '', ['id' => 'change_contributions']);
+    }
     $this->add('hidden', 'contact_id', '', ['id' => 'contact_id']);
     $this->add('hidden', 'membership_id', $membershipID, ['id' => 'membership_id']);
     $this->add('hidden', 'current_contact_id', $contactID, ['id' => 'current_contact_id']);
@@ -64,8 +69,8 @@ class CRM_LCD_MoveMembership_Form_MoveMembership extends CRM_Core_Form {
       'contact_id' => $values['change_contact_id'],
       'membership_id' => $values['membership_id'],
       'current_contact_id' => $values['current_contact_id'],
+      'change_contributions' => $values['change_contributions'],
     ];
-
     $result = CRM_LCD_MoveMembership_BAO_MoveMembership::moveMembership($params);
 
     if ($result) {
