@@ -2,6 +2,8 @@
 
 require_once 'movemembership.civix.php';
 
+use CRM_LCD_MoveMembership_ExtensionUtil as E;
+
 /**
  * Implements hook_civicrm_config().
  *
@@ -30,37 +32,42 @@ function movemembership_civicrm_enable() {
 }
 
 function movemembership_civicrm_links($op, $objectName, $objectId, &$links, &$mask, &$values) {
-  /*Civi::log()->debug('movemembership_civicrm_links', array(
-    '$op' => $op,
-    '$objectName' => $objectName,
-    '$objectId' => $objectId,
-    '$links' => $links,
-    '$mask' => $mask,
-    '$values' => $values,
-  ));*/
-
-  if ($op == 'membership.tab.row' && $objectName == 'Membership') {
+  if ($op === 'membership.tab.row' && $objectName === 'Membership' && CRM_Core_Permission::check('allow Move Membership')) {
     $links[] = array(
-      'name' => 'Move',
-      'url' => 'civicrm/movemembership',
+      'name' => E::ts('Move'),
+      'url' => 'civicrm/movemembership/task?reset=1&task_item=move',
       'qs' => 'id=%%id%%',
-      'title' => 'Move',
-      //'bit' => NULL,
+      'title' => E::ts('Move'),
+      'key' => 'move',
+      'weight' => 130,
     );
   }
 }
 
 function movemembership_civicrm_searchTasks($objectType, &$tasks) {
-  /*Civi::log()->debug('movemembership_civicrm_searchTasks', array(
-    '$objectType' => $objectType,
-    '$tasks' => $tasks,
-  ));*/
-
-  if ($objectType == 'membership') {
-    $tasks[] = array(
-      'title' => 'Move memberships',
+  if ($objectType === 'membership' && CRM_Core_Permission::check('allow Move Membership')) {
+    $tasks[] = [
+      'title' => E::ts('Move Membership'),
       'class' => 'CRM_LCD_MoveMembership_Form_Task',
       'result' => TRUE,
-    );
+      'is_single_mode' => TRUE,
+      'title_single_mode' => E::ts('Move'),
+      'name' => E::ts('Move'),
+      'url' => 'civicrm/membership/task?reset=1&task_item=move',
+      'key' => 'move',
+      'weight' => 130,
+    ];
   }
+}
+
+/**
+ *Implementation of hook_civicrm_permission
+ * @param array $permissions
+ */
+function movemembership_civicrm_permission(&$permissions) {
+  $permissions['allow Move Membership'] = [
+    'label' => E::ts('CiviCRM: Allow Move Memberships'),
+    'description' => E::ts('Allow Move Membership')
+   ];
+
 }

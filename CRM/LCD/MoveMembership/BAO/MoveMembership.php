@@ -11,6 +11,29 @@ class CRM_LCD_MoveMembership_BAO_MoveMembership {
         'id' => $params['membership_id'],
         'contact_id' => $params['contact_id'],
       ));
+
+Civi::log()->debug('movemembership params ' . print_r($params, true));
+
+      if ($params['change_contributions']) {
+        $contributions = civicrm_api3('MembershipPayment', 'get', [
+          'sequential' => 1,
+          'return' => ['contribution_id'],
+          'membership_id' => $params['membership_id'],
+        ]);
+Civi::log()->debug('movemembership contributions ' . print_r($contributions, true));
+
+        if ($contributions['count'] > 1) {
+          foreach($contributions['values'] as $contribution) {
+            $contributionParams = [
+              'change_contact_id' => $params['contact_id'],
+              'contact_id' => $params['contact_id'],
+              'contribution_id' => $contribution['contribution_id'],
+              'current_contact_id' => $params['current_contact_id'],
+            ];
+            CRM_LCD_MoveContrib_BAO_MoveContrib::moveContribution($contributionParams);
+          }
+        }
+      }
     }
     catch (CiviCRM_API3_Exception $e) {}
 
