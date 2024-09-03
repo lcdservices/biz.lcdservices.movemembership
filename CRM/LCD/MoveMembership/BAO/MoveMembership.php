@@ -7,23 +7,20 @@ class CRM_LCD_MoveMembership_BAO_MoveMembership {
 
   static function moveMembership($params) {
     try {
-      $membership = civicrm_api3('membership', 'create', array(
+      $membership = civicrm_api3('membership', 'create', [
         'id' => $params['membership_id'],
         'contact_id' => $params['contact_id'],
-      ));
+      ]);
 
-Civi::log()->debug('movemembership params ' . print_r($params, true));
-
-      if ($params['change_contributions']) {
+      if (!empty($params['change_contributions'])) {
         $contributions = civicrm_api3('MembershipPayment', 'get', [
           'sequential' => 1,
           'return' => ['contribution_id'],
           'membership_id' => $params['membership_id'],
         ]);
-Civi::log()->debug('movemembership contributions ' . print_r($contributions, true));
 
         if ($contributions['count'] > 1) {
-          foreach($contributions['values'] as $contribution) {
+          foreach ($contributions['values'] as $contribution) {
             $contributionParams = [
               'change_contact_id' => $params['contact_id'],
               'contact_id' => $params['contact_id'],
@@ -35,7 +32,7 @@ Civi::log()->debug('movemembership contributions ' . print_r($contributions, tru
         }
       }
     }
-    catch (CiviCRM_API3_Exception $e) {}
+    catch (CRM_Core_Exception $e) {}
 
     // record activity for moving membership
     if (empty($membership['is_error'])) {
@@ -44,14 +41,14 @@ Civi::log()->debug('movemembership contributions ' . print_r($contributions, tru
 
       $activityTypeID = \CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'membership_reassignment', 'name');
 
-      $activityParams = array(
+      $activityParams = [
         'source_contact_id' => $params['current_contact_id'],
         'activity_type_id' => $activityTypeID,
         'activity_date_time' => date('YmdHis'),
         'subject' => $subject,
         'details' => $details,
         'status_id' => 2,
-      );
+      ];
 
       $session = CRM_Core_Session::singleton();
       $id = $session->get('userID');
@@ -65,7 +62,7 @@ Civi::log()->debug('movemembership contributions ' . print_r($contributions, tru
       try {
         CRM_Activity_BAO_Activity::create($activityParams);
       }
-      catch (CiviCRM_API3_Exception $e) {}
+      catch (CRM_Core_Exception $e) {}
 
       return TRUE;
     }

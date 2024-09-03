@@ -16,16 +16,16 @@ class CRM_LCD_MoveMembership_Upgrader extends CRM_Extension_Upgrader_Base {
 
     //create new activity type
     try {
-      civicrm_api3('activity_type', 'create', array(
+      civicrm_api3('activity_type', 'create', [
         'label' => 'Membership Reassignment',
         'name' => 'membership_reassignment',
         'filter' => 0,
         'is_active' => 1,
         'is_reserved' => 1,
         'weight' => 1000,
-      ));
+      ]);
     }
-    catch (CRM_API3_Exception $e) {
+    catch (CRM_Core_Exception $e) {
       Civi::log()->error('CRM_LCD_MoveMembership_Upgrader install $e', $e);
     }
   }
